@@ -386,8 +386,8 @@ namespace Minesweeper
                 {
                     var i = x + GridWidth * y;
 
-                    if (_tileStates[i] == hidden
-                        && _proximity[i] < mine)
+                    if (_tileStates[i] != revealed
+                        &&_proximity[i] < mine)
                         return false;
                 }
             }
