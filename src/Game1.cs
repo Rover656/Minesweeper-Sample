@@ -1,9 +1,9 @@
-﻿using System.IO;
-using Inferno.Runtime.Graphics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using System;
+using System.IO;
 using Newtonsoft.Json;
-using Game = Inferno.Runtime.Game;
+using Inferno.Runtime;
+using Inferno.Runtime.Graphics;
+using Inferno.Runtime.Graphics.Text;
 
 namespace Minesweeper
 {
@@ -14,13 +14,15 @@ namespace Minesweeper
     {
         int State1;
 
-        public static SpriteFont font;
+        public static Font font;
 
         //Replace with the dimensions for your game resolution
         public Game1() : base(9*32, 9*32 + 64)
         {
             //Allow your game to be resized
-            Window.AllowUserResizing = true;
+            Window.AllowResize = true;
+
+            BackColor = Color.White;
         }
 
         /// <summary>
@@ -53,7 +55,8 @@ namespace Minesweeper
 
             if (cnfg.MineCount > cnfg.Width * cnfg.Height)
             {
-                Exit();
+                //Exit();
+                Environment.Exit(0);
             }
 
             Resize(cnfg.Width * 32, cnfg.Height * 32 + 64);
@@ -70,7 +73,7 @@ namespace Minesweeper
         {
             // TODO: use this.Content to load your game content here
 
-            font = Content.Load<SpriteFont>("font");
+            font = new Font("C:\\WINDOWS\\Fonts\\Arial.ttf", 16);
 
             base.LoadContent();
         }
