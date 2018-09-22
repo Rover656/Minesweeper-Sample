@@ -14,9 +14,9 @@ namespace Minesweeper
     /// </summary>
     public class State1 : State
     {
-        public int GridWidth = 9;
-        public int GridHeight = 9;
-        public int MineCount = 10;
+        public int GridWidth;
+        public int GridHeight;
+        public int MineCount;
 
         public int Total => GridWidth * GridHeight;
 
@@ -29,17 +29,17 @@ namespace Minesweeper
 
         private const int Mine = 9;
 
-        private int remainingMines = 10;
-        private bool running = true;
+        private int _remainingMines;
+        private bool _running = true;
 
-        private DateTime startTime;
-        private bool firstClick = true;
-        private DateTime endTime;
+        private DateTime _startTime;
+        private bool _firstClick = true;
+        private DateTime _endTime;
 
         /// <summary>
         /// Game stage, 0 = mid, 1 = win, 2 = lose
         /// </summary>
-        private byte stage = 0;
+        private byte _stage = 0;
 
         private const byte WaitState = 0;
         private const byte PlayState = 1;
@@ -48,25 +48,25 @@ namespace Minesweeper
 
         public State1(Game parent, MinesweeperConfig config) : base(parent, config.Width * 32, config.Height * 32 + 64)
         {
+            //Setup grid
             GridWidth = config.Width;
             GridHeight = config.Height;
             MineCount = config.MineCount;
 
             //Associate load and unload events
             OnStateLoad += State1_OnStateLoad;
-            OnStateUnLoad += State1_OnStateUnLoad;
             OnStateDraw += State1_OnStateDraw;
             OnStateUpdate += State1_OnStateUpdate;
 
-            //Add your state construction logic here
-
+            //Setup variables
             _tileStates = new int[Total];
             _proximity = new int[Total];
 
-            remainingMines = MineCount;
+            _remainingMines = MineCount;
 
             SetMines();
             
+            //Set background (Inferno 2.0 does not actually support yet, so this does nothing)
             Background = Sprite.FromColor(Color.White, Width, Height);
         }
 
@@ -79,16 +79,16 @@ namespace Minesweeper
 
         private void ClearGrid()
         {
-            for (int n = 0; n < Total; n++)
+            for (var n = 0; n < Total; n++)
             {
                 _tileStates[n] = Hidden;
                 _proximity[n] = 0;
             }
 
-            remainingMines = MineCount;
-            stage = WaitState;
-            running = true;
-            firstClick = true;
+            _remainingMines = MineCount;
+            _stage = WaitState;
+            _running = true;
+            _firstClick = true;
         }
 
         private void State1_OnStateUpdate(object sender, EventArgs e)
@@ -104,14 +104,10 @@ namespace Minesweeper
             DrawTime();
         }
 
-        private void State1_OnStateUnLoad(object sender, System.EventArgs e)
-        {
-            //Add UnLoad logic
-        }
-
         private void State1_OnStateLoad(object sender, System.EventArgs e)
         {
-            var resetBtn = new Button(new Vector2(0, 0), this, "Reset", Game1.font, Color.Black, Color.Transparent, Color.Transparent);
+            //Add reset button
+            var resetBtn = new Button(new Vector2(0, 0), this, "Reset", Game1.font, Color.Black, Color.Transparent, Color.Black);
             resetBtn.ControlClicked += ResetBtn_ControlClicked;
             AddInstance(resetBtn);
         }
@@ -119,12 +115,12 @@ namespace Minesweeper
         private void DrawGrid()
         {
             Drawing.Set_Color(Color.Black);
-            for (int x = 0; x <= GridWidth * 32; x += 32)
+            for (var x = 0; x <= GridWidth * 32; x += 32)
             {
                 Drawing.Draw_Line(new Vector2(x, 64), new Vector2(x, 64 + GridHeight * 32));
             }
 
-            for (int y = 64; y <= 64 + GridHeight * 32; y += 32)
+            for (var y = 64; y <= 64 + GridHeight * 32; y += 32)
             {
                 Drawing.Draw_Line(new Vector2(0, y), new Vector2(GridWidth * 32, y));
             }
@@ -132,9 +128,9 @@ namespace Minesweeper
 
         private void DrawTiles()
         {
-            for (int x = 0; x < GridWidth; x++)
+            for (var x = 0; x < GridWidth; x++)
             {
-                for (int y = 0; y < GridHeight; y++)
+                for (var y = 0; y < GridHeight; y++)
                 {
                     var i = x + GridWidth * y;
 
@@ -142,6 +138,9 @@ namespace Minesweeper
                     {
                         if (_proximity[i] < Mine)
                         {
+                            if (_proximity[i] <= 0)
+                                continue;
+
                             Drawing.Set_Color(Color.Blue);
                             Drawing.Set_Font(Game1.font);
                             Drawing.Draw_Text(new Vector2(x * 32 + 8, y * 32 + 64 + 8), _proximity[i].ToString());
@@ -158,13 +157,13 @@ namespace Minesweeper
                         Drawing.Draw_Rectangle(new Vector2(x * 32, y * 32 + 64), 32, 32);
                     }
 
-                    if (_tileStates[i] == Flagged)
-                    {
-                        Drawing.Set_Color(Color.Red);
-                        Drawing.Set_Font(Game1.font);
-                        Drawing.Draw_Text(new Vector2(x * 32 + 8, y * 32 + 64 + 8), "!");
-                    }
-                    
+                    if (_tileStates[i] != Flagged)
+                        continue;
+
+                    Drawing.Set_Color(Color.Red);
+                    Drawing.Set_Font(Game1.font);
+                    Drawing.Draw_Text(new Vector2(x * 32 + 8, y * 32 + 64 + 8), "!");
+
                 }
             }
         }
@@ -173,20 +172,20 @@ namespace Minesweeper
         {
             Drawing.Set_Color(Color.Black);
             Drawing.Set_Font(Game1.font);
-            Drawing.Draw_Text(new Vector2(8, 20), "Mines: " + remainingMines);
+            Drawing.Draw_Text(new Vector2(8, 20), "Mines: " + _remainingMines);
         }
 
         private void DrawTime()
         {
             Drawing.Set_Color(Color.Black);
             Drawing.Set_Font(Game1.font);
-            if (stage == PlayState)
+            if (_stage == PlayState)
             {
-                Drawing.Draw_Text(new Vector2(150, 20), (DateTime.Now - startTime).ToString("t"));
+                Drawing.Draw_Text(new Vector2(150, 20), (DateTime.Now - _startTime).ToString("t"));
             }
-            else if (stage > PlayState)
+            else if (_stage > PlayState)
             {
-                Drawing.Draw_Text(new Vector2(150, 20), (endTime - startTime).ToString("t"));
+                Drawing.Draw_Text(new Vector2(150, 20), (_endTime - _startTime).ToString("t"));
             }
         }
 
@@ -218,12 +217,12 @@ namespace Minesweeper
             if (x > 0) RevealTile(i - 1, true);
             if (x + 1 < 9) RevealTile(i + 1, true);
 
-            if (i < Total - GridWidth)
-            {
-                if (x > 0) RevealTile(i + GridWidth - 1, true);
-                RevealTile(i + GridWidth, true);
-                if (x + 1 < GridWidth) RevealTile(i + GridWidth + 1, true);
-            }
+            if (i >= Total - GridWidth)
+                return;
+
+            if (x > 0) RevealTile(i + GridWidth - 1, true);
+            RevealTile(i + GridWidth, true);
+            if (x + 1 < GridWidth) RevealTile(i + GridWidth + 1, true);
         }
 
         private int _lastXClick = -1;
@@ -232,17 +231,17 @@ namespace Minesweeper
 
         private void FirstClick()
         {
-            if (firstClick)
-            {
-                startTime = DateTime.Now;
-                firstClick = false;
-                stage = PlayState;
-            }
+            if (!_firstClick)
+                return;
+
+            _startTime = DateTime.Now;
+            _firstClick = false;
+            _stage = PlayState;
         }
 
         private void HandleClicks()
         {
-            if (stage > PlayState)
+            if (_stage > PlayState)
                 return;
 
             var state = Mouse.GetState(this);
@@ -285,12 +284,12 @@ namespace Minesweeper
                     if (_tileStates[i] == Hidden)
                     {
                         _tileStates[i] = Flagged;
-                        remainingMines--;
+                        _remainingMines--;
                     }
                     else if (_tileStates[i] == Flagged)
                     {
                         _tileStates[i] = Hidden;
-                        remainingMines++;
+                        _remainingMines++;
                     }
                 }
 
@@ -325,9 +324,9 @@ namespace Minesweeper
             }
 
             //Calculate proximity
-            for (int x = 0; x < GridWidth; x++)
+            for (var x = 0; x < GridWidth; x++)
             {
-                for (int y = 0; y < GridHeight; y++)
+                for (var y = 0; y < GridHeight; y++)
                 {
                     var i = x + GridWidth * y;
 
@@ -353,30 +352,30 @@ namespace Minesweeper
                         if (_proximity[i + 1] == Mine)
                             _proximity[i]++;
 
-                    if (i < Total - GridWidth)
-                    {
-                        if (x > 0)
-                            if (_proximity[i + GridWidth - 1] == Mine)
-                                _proximity[i]++;
-                        if (_proximity[i + GridWidth] == Mine)
+                    if (i >= Total - GridWidth)
+                        continue;
+
+                    if (x > 0)
+                        if (_proximity[i + GridWidth - 1] == Mine)
                             _proximity[i]++;
-                        if (x + 1 < GridWidth)
-                            if (_proximity[i + GridWidth + 1] == Mine)
-                                _proximity[i]++;
-                    }
+                    if (_proximity[i + GridWidth] == Mine)
+                        _proximity[i]++;
+                    if (x + 1 < GridWidth)
+                        if (_proximity[i + GridWidth + 1] == Mine)
+                            _proximity[i]++;
                 }
             }
         }
 
         private bool CheckWin()
         {
-            if (!running)
+            if (!_running)
                 return false;
 
             //Check all non-mines are cleared
-            for (int x = 0; x < GridWidth; x++)
+            for (var x = 0; x < GridWidth; x++)
             {
-                for (int y = 0; y < GridHeight; y++)
+                for (var y = 0; y < GridHeight; y++)
                 {
                     var i = x + GridWidth * y;
 
@@ -394,19 +393,17 @@ namespace Minesweeper
             //Reveal mines
             if (outcome == false)
             {
-                for (int i = 0; i < Total; i++)
-                {
+                for (var i = 0; i < Total; i++)
                     if (_proximity[i] == 9)
                         _tileStates[i] = Revealed;
-                }
             }
 
-            stage = outcome ? WinState : LoseState;
+            _stage = outcome ? WinState : LoseState;
 
-            endTime = DateTime.Now;
-            running = false;
+            _endTime = DateTime.Now;
+            _running = false;
 
-            MessageBox.Show("Minesweeper", stage == LoseState ? "You lost." : "You won.", MessageBoxType.Information, true);
+            MessageBox.Show("Minesweeper", _stage == LoseState ? "You lost." : "You won.", MessageBoxType.Information, true);
         }
     }
 }
