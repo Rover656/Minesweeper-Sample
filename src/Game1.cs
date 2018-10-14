@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 using Newtonsoft.Json;
-using Inferno.Runtime;
-using Inferno.Runtime.Graphics;
-using Inferno.Runtime.Graphics.Text;
+using Inferno;
+using Inferno.Graphics;
+using Inferno.Graphics.Text;
 
 namespace Minesweeper
 {
@@ -73,7 +73,7 @@ namespace Minesweeper
         {
             // TODO: use this.Content to load your game content here
 
-            font = new Font("C:\\WINDOWS\\Fonts\\Arial.ttf", 16);
+            font = Font.CreateFont("Arial", 12);
 
             base.LoadContent();
         }

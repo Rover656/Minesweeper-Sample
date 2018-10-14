@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using Inferno.Runtime;
-using Inferno.Runtime.Core;
-using Inferno.Runtime.Graphics;
-using Inferno.Runtime.Input;
-using Inferno.Runtime.UI;
-using Inferno.Runtime.UI.Controls;
+using Inferno;
+using Inferno.Core;
+using Inferno.Graphics;
+using Inferno.Input;
+using Inferno.UI;
+using Inferno.UI.Controls;
 
 namespace Minesweeper
 {
@@ -114,15 +114,14 @@ namespace Minesweeper
 
         private void DrawGrid()
         {
-            Drawing.Set_Color(Color.Black);
             for (var x = 0; x <= GridWidth * 32; x += 32)
             {
-                Drawing.Draw_Line(new Vector2(x, 64), new Vector2(x, 64 + GridHeight * 32));
+                Game.Renderer.DrawLine(new Vector2(x, 64), new Vector2(x, 64 + GridHeight * 32), Color.Black, 1, 2f);
             }
 
             for (var y = 64; y <= 64 + GridHeight * 32; y += 32)
             {
-                Drawing.Draw_Line(new Vector2(0, y), new Vector2(GridWidth * 32, y));
+                Game.Renderer.DrawLine(new Vector2(0, y), new Vector2(GridWidth * 32, y), Color.Black, 1, 2f);
             }
         }
 
@@ -140,29 +139,24 @@ namespace Minesweeper
                         {
                             if (_proximity[i] <= 0)
                                 continue;
-
-                            Drawing.Set_Color(Color.Blue);
-                            Drawing.Set_Font(Game1.font);
-                            Drawing.Draw_Text(new Vector2(x * 32 + 8, y * 32 + 64 + 8), _proximity[i].ToString());
+                            Game.Renderer.DrawText(_proximity[i].ToString(), new Vector2(x * 32 + 8, y * 32 + 64 + 8), Game1.font, Color.Blue, -2f);
                         }
                         else
                         {
                             Drawing.Set_Color(Color.Red);
-                            Drawing.Draw_Circle(new Vector2(x * 32 + 16, y * 32 + 16 + 64), 16, true, 1);
+                            Game.Renderer.DrawCircle(new Vector2(x * 32 + 16, y * 32 + 16 + 64), 16, Color.Red);
                         }
                     }
                     else
                     {
-                        Drawing.Set_Color(new Color(128, 128, 128));
-                        Drawing.Draw_Rectangle(new Vector2(x * 32, y * 32 + 64), 32, 32);
+                        Game.Renderer.DrawRectangle(new Rectangle(x * 32, y * 32 + 64, 32, 32), new Color(128, 127, 128));
+
                     }
 
                     if (_tileStates[i] != Flagged)
                         continue;
 
-                    Drawing.Set_Color(Color.Red);
-                    Drawing.Set_Font(Game1.font);
-                    Drawing.Draw_Text(new Vector2(x * 32 + 8, y * 32 + 64 + 8), "!");
+                    Game.Renderer.DrawText("!", new Vector2(x * 32 + 8, y * 32 + 64 + 8), Game1.font, Color.Red, 1f);
 
                 }
             }
@@ -170,22 +164,18 @@ namespace Minesweeper
 
         private void DrawMines()
         {
-            Drawing.Set_Color(Color.Black);
-            Drawing.Set_Font(Game1.font);
-            Drawing.Draw_Text(new Vector2(8, 20), "Mines: " + _remainingMines);
+            Game.Renderer.DrawText("Mines: " + _remainingMines, new Vector2(8, 20), Game1.font, Color.Black);
         }
 
         private void DrawTime()
         {
-            Drawing.Set_Color(Color.Black);
-            Drawing.Set_Font(Game1.font);
             if (_stage == PlayState)
             {
-                Drawing.Draw_Text(new Vector2(150, 20), (DateTime.Now - _startTime).ToString("t"));
+                Game.Renderer.DrawText((DateTime.Now - _startTime).ToString("t"), new Vector2(120, 20), Game1.font, Color.Black);
             }
             else if (_stage > PlayState)
             {
-                Drawing.Draw_Text(new Vector2(150, 20), (_endTime - _startTime).ToString("t"));
+                Game.Renderer.DrawText((_endTime - _startTime).ToString("t"), new Vector2(120, 20), Game1.font, Color.Black);
             }
         }
 
