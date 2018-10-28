@@ -2,6 +2,8 @@
 using System.IO;
 using Newtonsoft.Json;
 using Inferno;
+using Inferno.Audio;
+using Inferno.Content;
 using Inferno.Graphics;
 using Inferno.Graphics.Text;
 
@@ -12,9 +14,9 @@ namespace Minesweeper
     /// </summary>
     public class Game1 : Game
     {
-        int State1;
-
         public static Font font;
+        public static Sound Win;
+        public static Sound Explode;
 
         //Replace with the dimensions for your game resolution
         public Game1() : base(9*32, 9*32 + 64)
@@ -61,8 +63,7 @@ namespace Minesweeper
 
             Resize(cnfg.Width * 32, cnfg.Height * 32 + 64);
 
-            State1 = AddState(new State1(this, cnfg));
-            SetState(State1);
+            SetState(new State1(this, cnfg));
         }
 
         /// <summary>
@@ -73,7 +74,13 @@ namespace Minesweeper
         {
             // TODO: use this.Content to load your game content here
 
-            font = Font.CreateFont("Arial", 12);
+            FocusPause = false;
+
+            font = Font.CreateFont("Arial", 14);
+            Win = ContentLoader.LoadWaveFromFile("win.wav");
+            Explode = ContentLoader.LoadWaveFromFile("explode.wav");
+            Win.Volume = 0.5f;
+            Explode.Volume = 0.5f;
 
             base.LoadContent();
         }
@@ -86,6 +93,9 @@ namespace Minesweeper
         {
             // TODO: Unload any non ContentManager content here
 
+            font.Dispose();
+            Win.Dispose();
+            Explode.Dispose();
             base.UnloadContent();
         }
     }

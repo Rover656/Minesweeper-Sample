@@ -1,4 +1,5 @@
 ﻿using System;
+using Inferno.UI;
 
 namespace Minesweeper
 {
@@ -21,6 +22,7 @@ namespace Minesweeper
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                MessageBox.Show("Fatal error", e.ToString(), MessageBoxType.Error);
                 Environment.Exit(0);
             }
         }

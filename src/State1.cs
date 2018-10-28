@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Inferno;
-using Inferno.Core;
 using Inferno.Graphics;
 using Inferno.Input;
 using Inferno.UI;
@@ -12,7 +11,7 @@ namespace Minesweeper
     /// <summary>
     /// This is the first screen in your game
     /// </summary>
-    public class State1 : State
+    public class State1 : GameState
     {
         public int GridWidth;
         public int GridHeight;
@@ -46,7 +45,7 @@ namespace Minesweeper
         private const byte LoseState = 2;
         private const byte WinState = 3;
 
-        public State1(Game parent, MinesweeperConfig config) : base(parent, config.Width * 32, config.Height * 32 + 64)
+        public State1(Game parent, MinesweeperConfig config) : base(parent, config.Width * 32, config.Height * 32 + 64, Color.White)
         {
             //Setup grid
             GridWidth = config.Width;
@@ -54,9 +53,9 @@ namespace Minesweeper
             MineCount = config.MineCount;
 
             //Associate load and unload events
-            OnStateLoad += State1_OnStateLoad;
-            OnStateDraw += State1_OnStateDraw;
-            OnStateUpdate += State1_OnStateUpdate;
+            OnLoad += State1_OnStateLoad;
+            OnDraw += State1_OnStateDraw;
+            OnUpdate += State1_OnStateUpdate;
 
             //Setup variables
             _tileStates = new int[Total];
@@ -65,9 +64,6 @@ namespace Minesweeper
             _remainingMines = MineCount;
 
             SetMines();
-            
-            //Set background (Inferno 2.0 does not actually support yet, so this does nothing)
-            Background = Sprite.FromColor(Color.White, Width, Height);
         }
 
         private void ResetBtn_ControlClicked()
@@ -107,9 +103,9 @@ namespace Minesweeper
         private void State1_OnStateLoad(object sender, System.EventArgs e)
         {
             //Add reset button
-            var resetBtn = new Button(new Vector2(0, 0), this, "Reset", Game1.font, Color.Black, Color.Transparent, Color.Black);
+            var resetBtn = new Button(new Vector2(0, 0), "Reset", Game1.font, Color.Black, Color.Transparent, Color.Black);
             resetBtn.ControlClicked += ResetBtn_ControlClicked;
-            AddInstance(resetBtn);
+            UserInterface.AddControl(resetBtn);
         }
 
         private void DrawGrid()
@@ -143,7 +139,6 @@ namespace Minesweeper
                         }
                         else
                         {
-                            Drawing.Set_Color(Color.Red);
                             Game.Renderer.DrawCircle(new Vector2(x * 32 + 16, y * 32 + 16 + 64), 16, Color.Red);
                         }
                     }
@@ -215,10 +210,6 @@ namespace Minesweeper
             if (x + 1 < GridWidth) RevealTile(i + GridWidth + 1, true);
         }
 
-        private int _lastXClick = -1;
-        private int _lastYClick = -1;
-        private int _lastClickType = -1;
-
         private void FirstClick()
         {
             if (!_firstClick)
@@ -242,9 +233,6 @@ namespace Minesweeper
 
             if (state.LeftButton == ButtonState.Pressed)
             {
-                if (x == _lastXClick && y == _lastYClick && _lastClickType == 0)
-                    return;
-
                 if (i < Total && i >= 0)
                 {
                     FirstClick();
@@ -258,16 +246,10 @@ namespace Minesweeper
                     }
                 }
 
-                _lastClickType = 0;
-
-                _lastXClick = x;
-                _lastYClick = y;
+                Mouse.ClearLeftButton();
             }
             else if (state.RightButton == ButtonState.Pressed)
             {
-                if (x == _lastXClick && y == _lastYClick && _lastClickType == 1)
-                    return;
-
                 if (i < Total && i >= 0)
                 {
                     FirstClick();
@@ -282,11 +264,7 @@ namespace Minesweeper
                         _remainingMines++;
                     }
                 }
-
-                _lastClickType = 1;
-
-                _lastXClick = x;
-                _lastYClick = y;
+                Mouse.ClearRightButton();
             }
 
             if (CheckWin())
@@ -389,6 +367,15 @@ namespace Minesweeper
             }
 
             _stage = outcome ? WinState : LoseState;
+
+            if (_stage == WinState)
+            {
+                Game1.Win.Play();
+            }
+            else
+            {
+                Game1.Explode.Play();
+            }
 
             _endTime = DateTime.Now;
             _running = false;
